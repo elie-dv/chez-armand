@@ -1,39 +1,192 @@
-// Supabase configuration
-// Replace these with your actual Supabase project URL and anon key
-const SUPABASE_URL = 'https://qlgftfpdaawujzxdnjzf.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFsZ2Z0ZnBkYWF3dWp6eGRuanpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1OTgzNjQsImV4cCI6MjA4MDE3NDM2NH0.dx984AJf3mbreiH1Ob0t45lClsfguLeqMmprKd2N4o4'; // Replace with your actual anon key
+// ==================== CONFIGURATION ====================
+const CONFIG = {
+    supabase: {
+        url: 'https://qlgftfpdaawujzxdnjzf.supabase.co',
+        anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFsZ2Z0ZnBkYWF3dWp6eGRuanpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1OTgzNjQsImV4cCI6MjA4MDE3NDM2NH0.dx984AJf3mbreiH1Ob0t45lClsfguLeqMmprKd2N4o4',
+    },
 
-// Initialize Supabase client
-// The supabase library is loaded via CDN before this script
-let supabaseClient;
-try {
-    if (typeof supabase === 'undefined') {
-        console.error('Supabase library not loaded. Make sure the CDN script is included before this script.');
-    } else {
-        supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        console.log('Supabase client initialized successfully');
+    forms: {
+        village: {
+            table: 'villages',
+            submitLabel: 'Envoyer la demande',
+            successMessage: 'Merci ! Votre demande a été envoyée avec succès. Nous vous contacterons bientôt. 🎉',
+            fields: {
+                nom:                { required: true, label: 'Nom du village' },
+                code_postal:        { required: true, label: 'Code postal',        pattern: /^[0-9]{5}$/, patternMsg: 'Le code postal doit contenir 5 chiffres.' },
+                nombre_habitants:   { required: true, label: "Nombre d'habitants", type: 'int', min: 1, max: 100, maxMsg: 'Le village doit avoir moins de 100 habitants.' },
+                contact_nom:        { required: true, label: 'Nom du contact' },
+                contact_email:      { required: true, label: 'Email',              pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, patternMsg: 'Veuillez entrer une adresse email valide.' },
+                contact_telephone:  { required: true, label: 'Téléphone' },
+                date_souhaitee:     { required: false },
+                message:            { required: false },
+            },
+        },
+
+        jeune: {
+            table: 'jeunes',
+            submitLabel: 'Postuler',
+            successMessage: 'Merci ! Votre candidature a été envoyée avec succès. Nous vous contacterons bientôt. 🎉',
+            fields: {
+                prenom:     { required: true, label: 'Prénom' },
+                nom:        { required: true, label: 'Nom' },
+                age:        { required: true, label: 'Âge',        type: 'int', min: 16, max: 35, minMsg: "L'âge doit être entre 16 et 35 ans.", maxMsg: "L'âge doit être entre 16 et 35 ans." },
+                email:      { required: true, label: 'Email',      pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, patternMsg: 'Veuillez entrer une adresse email valide.' },
+                telephone:  { required: true, label: 'Téléphone' },
+                motivation: { required: true, label: 'Motivation', minLength: 20, minLengthMsg: 'Veuillez développer votre motivation (au moins 20 caractères).' },
+            },
+        },
+    },
+
+    messages: {
+        requiredField: 'Ce champ est obligatoire.',
+        genericError: 'Une erreur est survenue. Veuillez réessayer.',
+        configError: 'Erreur de configuration. Veuillez recharger la page.',
+        sending: 'Envoi en cours...',
+    },
+};
+
+// ==================== SUPABASE ====================
+let supabaseClient = null;
+
+function initSupabase() {
+    try {
+        if (typeof supabase === 'undefined') {
+            console.error('Supabase library not loaded.');
+            return false;
+        }
+        supabaseClient = supabase.createClient(CONFIG.supabase.url, CONFIG.supabase.anonKey);
+        return true;
+    } catch (err) {
+        console.error('Supabase init error:', err);
+        return false;
     }
-} catch (error) {
-    console.error('Error initializing Supabase client:', error);
 }
 
-// Utility functions
-function showMessage(formId, message, type) {
-    const messageEl = document.getElementById(`${formId}-message`);
-    if (messageEl) {
-        messageEl.textContent = message;
-        messageEl.className = `form-message ${type}`;
-        messageEl.style.display = 'block';
-        
-        // Scroll to message
-        messageEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        
-        // Hide success message after 5 seconds
-        if (type === 'success') {
-            setTimeout(() => {
-                messageEl.style.display = 'none';
-            }, 5000);
+// ==================== VALIDATION ====================
+
+/**
+ * Validates form data against field rules.
+ * Returns an array of { field, message } for each error, or [] if valid.
+ */
+function validateForm(data, fieldRules) {
+    const errors = [];
+
+    for (const [field, rules] of Object.entries(fieldRules)) {
+        const value = data[field];
+
+        // Required check
+        if (rules.required) {
+            const isEmpty = value === null || value === undefined || String(value).trim() === '' || (rules.type === 'int' && isNaN(value));
+            if (isEmpty) {
+                errors.push({ field, message: CONFIG.messages.requiredField });
+                continue; // skip further checks for this field
+            }
+        } else if (value === null || value === undefined || String(value).trim() === '') {
+            continue; // optional + empty → skip
         }
+
+        // Pattern check
+        if (rules.pattern && !rules.pattern.test(String(value))) {
+            errors.push({ field, message: rules.patternMsg || 'Format invalide.' });
+            continue;
+        }
+
+        // Numeric checks
+        if (rules.type === 'int') {
+            const num = parseInt(value);
+            if (rules.min !== undefined && num < rules.min) {
+                errors.push({ field, message: rules.minMsg || `La valeur minimale est ${rules.min}.` });
+                continue;
+            }
+            if (rules.max !== undefined && num > rules.max) {
+                errors.push({ field, message: rules.maxMsg || `La valeur maximale est ${rules.max}.` });
+                continue;
+            }
+        }
+
+        // Min length
+        if (rules.minLength && String(value).trim().length < rules.minLength) {
+            errors.push({ field, message: rules.minLengthMsg || `Minimum ${rules.minLength} caractères.` });
+        }
+    }
+
+    return errors;
+}
+
+// ==================== UI HELPERS ====================
+
+function showMessage(formId, message, type) {
+    const el = document.getElementById(`${formId}-message`);
+    if (!el) return;
+
+    el.textContent = message;
+    el.className = `form-message ${type}`;
+    el.style.display = 'block';
+    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    if (type === 'success') {
+        setTimeout(() => { el.style.display = 'none'; }, 6000);
+    }
+}
+
+function clearMessage(formId) {
+    const el = document.getElementById(`${formId}-message`);
+    if (el) {
+        el.style.display = 'none';
+        el.className = 'form-message';
+        el.textContent = '';
+    }
+}
+
+function showFieldErrors(form, errors) {
+    clearFieldErrors(form);
+    let firstErrorField = null;
+
+    for (const { field, message } of errors) {
+        // Find the input by name
+        const input = form.querySelector(`[name="${field}"]`);
+        if (!input) continue;
+
+        const group = input.closest('.form-group');
+        if (!group) continue;
+
+        group.classList.add('has-error');
+
+        const errorSpan = document.createElement('span');
+        errorSpan.className = 'field-error';
+        errorSpan.textContent = message;
+        errorSpan.setAttribute('role', 'alert');
+        group.appendChild(errorSpan);
+
+        if (!firstErrorField) firstErrorField = input;
+    }
+
+    // Focus first error field
+    if (firstErrorField) {
+        firstErrorField.focus();
+    }
+}
+
+function clearFieldErrors(form) {
+    form.querySelectorAll('.form-group.has-error').forEach(g => g.classList.remove('has-error'));
+    form.querySelectorAll('.field-error').forEach(el => el.remove());
+}
+
+function setFormLoading(formId, isLoading, config) {
+    const form = document.getElementById(`${formId}-form`);
+    const btn = form?.querySelector('button[type="submit"]');
+    if (!btn) return;
+
+    btn.disabled = isLoading;
+
+    if (isLoading) {
+        btn.classList.add('btn-loading');
+        btn.setAttribute('aria-busy', 'true');
+        btn.textContent = CONFIG.messages.sending;
+    } else {
+        btn.classList.remove('btn-loading');
+        btn.removeAttribute('aria-busy');
+        btn.textContent = config.submitLabel;
     }
 }
 
@@ -41,221 +194,195 @@ function resetForm(formId) {
     const form = document.getElementById(`${formId}-form`);
     if (form) {
         form.reset();
+        clearFieldErrors(form);
     }
 }
 
-function setFormLoading(formId, isLoading) {
+// ==================== FORM HANDLER FACTORY ====================
+
+function createFormHandler(formId, config) {
     const form = document.getElementById(`${formId}-form`);
-    const submitBtn = form?.querySelector('button[type="submit"]');
-    if (submitBtn) {
-        submitBtn.disabled = isLoading;
-        if (isLoading) {
-            submitBtn.textContent = 'Envoi en cours...';
-        } else {
-            submitBtn.textContent = formId === 'village' ? 'Envoyer la demande' : 'Postuler';
-        }
-    }
-}
+    if (!form) return;
 
-// Wait for DOM to be ready
-document.addEventListener('DOMContentLoaded', () => {
-    initializeForms();
-});
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        clearMessage(formId);
+        clearFieldErrors(form);
 
-function initializeForms() {
-    // Village form handler
-    const villageForm = document.getElementById('village-form');
-    if (!villageForm) {
-        console.error('Village form not found');
-        return;
-    }
-    
-    villageForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const form = e.target;
-    const formData = new FormData(form);
-    
-    // Get form values
-    const villageData = {
-        nom: formData.get('nom').trim(),
-        code_postal: formData.get('code_postal').trim(),
-        nombre_habitants: parseInt(formData.get('nombre_habitants')),
-        contact_nom: formData.get('contact_nom').trim(),
-        contact_email: formData.get('contact_email').trim(),
-        contact_telephone: formData.get('contact_telephone').trim(),
-        date_souhaitee: formData.get('date_souhaitee') || null,
-        message: formData.get('message')?.trim() || null
-    };
-    
-    // Validation
-    if (!villageData.nom || !villageData.code_postal || !villageData.nombre_habitants || 
-        !villageData.contact_nom || !villageData.contact_email || !villageData.contact_telephone) {
-        showMessage('village', 'Veuillez remplir tous les champs obligatoires.', 'error');
-        return;
-    }
-    
-    if (villageData.nombre_habitants > 100) {
-        showMessage('village', 'Le village doit avoir moins de 100 habitants.', 'error');
-        return;
-    }
-    
-    if (!/^[0-9]{5}$/.test(villageData.code_postal)) {
-        showMessage('village', 'Le code postal doit contenir 5 chiffres.', 'error');
-        return;
-    }
-    
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(villageData.contact_email)) {
-        showMessage('village', 'Veuillez entrer une adresse email valide.', 'error');
-        return;
-    }
-    
-    // Check if Supabase client is initialized
-    if (!supabaseClient) {
-        showMessage('village', 'Erreur de configuration. Veuillez recharger la page.', 'error');
-        return;
-    }
-    
-    // Submit to Supabase
-    setFormLoading('village', true);
-    showMessage('village', 'Envoi en cours...', 'loading');
-    
-    try {
-        console.log('Submitting village data:', villageData);
-        const { error } = await supabaseClient
-            .from('villages')
-            .insert([villageData]);
-        
-        if (error) {
-            console.error('Supabase error:', error);
-            throw error;
+        const formData = new FormData(form);
+        const data = {};
+
+        // Build data object from config fields
+        for (const [field, rules] of Object.entries(config.fields)) {
+            let value = formData.get(field);
+            if (value !== null) value = value.trim();
+
+            if (rules.type === 'int' && value) {
+                data[field] = parseInt(value);
+            } else {
+                data[field] = value || null;
+            }
         }
-        
-        showMessage('village', 'Merci ! Votre demande a été envoyée avec succès. Nous vous contacterons bientôt.', 'success');
-        resetForm('village');
-        
-    } catch (error) {
-        console.error('Error submitting village form:', error);
-        const errorMessage = error.message || error.code || 'Erreur inconnue';
-        showMessage('village', `Une erreur est survenue: ${errorMessage}. Vérifiez la console pour plus de détails.`, 'error');
-    } finally {
-        setFormLoading('village', false);
-    }
-    });
-    
-    // Jeune form handler
-    const jeuneForm = document.getElementById('jeune-form');
-    if (!jeuneForm) {
-        console.error('Jeune form not found');
-        return;
-    }
-    
-    jeuneForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const form = e.target;
-    const formData = new FormData(form);
-    
-    // Get form values
-    const jeuneData = {
-        prenom: formData.get('prenom').trim(),
-        nom: formData.get('nom').trim(),
-        age: parseInt(formData.get('age')),
-        email: formData.get('email').trim(),
-        telephone: formData.get('telephone').trim(),
-        motivation: formData.get('motivation').trim()
-    };
-    
-    // Validation
-    if (!jeuneData.prenom || !jeuneData.nom || !jeuneData.age || 
-        !jeuneData.email || !jeuneData.telephone || !jeuneData.motivation) {
-        showMessage('jeune', 'Veuillez remplir tous les champs obligatoires.', 'error');
-        return;
-    }
-    
-    if (jeuneData.age < 16 || jeuneData.age > 35) {
-        showMessage('jeune', 'L\'âge doit être entre 16 et 35 ans.', 'error');
-        return;
-    }
-    
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(jeuneData.email)) {
-        showMessage('jeune', 'Veuillez entrer une adresse email valide.', 'error');
-        return;
-    }
-    
-    if (jeuneData.motivation.length < 20) {
-        showMessage('jeune', 'Veuillez développer votre motivation (au moins 20 caractères).', 'error');
-        return;
-    }
-    
-    // Check if Supabase client is initialized
-    if (!supabaseClient) {
-        showMessage('jeune', 'Erreur de configuration. Veuillez recharger la page.', 'error');
-        return;
-    }
-    
-    // Submit to Supabase
-    setFormLoading('jeune', true);
-    showMessage('jeune', 'Envoi en cours...', 'loading');
-    
-    try {
-        console.log('Submitting jeune data:', jeuneData);
-        const { error } = await supabaseClient
-            .from('jeunes')
-            .insert([jeuneData]);
-        
-        if (error) {
-            console.error('Supabase error:', error);
-            throw error;
+
+        // Validate
+        const errors = validateForm(data, config.fields);
+        if (errors.length > 0) {
+            showFieldErrors(form, errors);
+            return;
         }
-        
-        showMessage('jeune', 'Merci ! Votre candidature a été envoyée avec succès. Nous vous contacterons bientôt.', 'success');
-        resetForm('jeune');
-        
-    } catch (error) {
-        console.error('Error submitting jeune form:', error);
-        const errorMessage = error.message || error.code || 'Erreur inconnue';
-        showMessage('jeune', `Une erreur est survenue: ${errorMessage}. Vérifiez la console pour plus de détails.`, 'error');
-    } finally {
-        setFormLoading('jeune', false);
-    }
+
+        // Check Supabase
+        if (!supabaseClient) {
+            showMessage(formId, CONFIG.messages.configError, 'error');
+            return;
+        }
+
+        // Submit
+        setFormLoading(formId, true, config);
+        showMessage(formId, CONFIG.messages.sending, 'loading');
+
+        try {
+            const { error } = await supabaseClient
+                .from(config.table)
+                .insert([data]);
+
+            if (error) throw error;
+
+            showMessage(formId, config.successMessage, 'success');
+            resetForm(formId);
+        } catch (err) {
+            console.error(`Form ${formId} error:`, err.code || err.message);
+            showMessage(formId, CONFIG.messages.genericError, 'error');
+        } finally {
+            setFormLoading(formId, false, config);
+        }
     });
-    
-    // Reveal form sections on card click (only one at a time)
-    const formSections = document.querySelectorAll('.main-content .section');
-    document.querySelectorAll('.card').forEach(card => {
-        card.addEventListener('click', function (e) {
-            e.preventDefault();
-            const targetId = this.getAttribute('href');
-            const target = document.querySelector(targetId);
-            if (target) {
-                // Hide all form sections first
-                formSections.forEach(s => {
-                    s.classList.remove('visible');
-                    s.classList.add('hidden');
-                });
-                // Show only the selected one
-                target.classList.remove('hidden');
-                target.classList.add('visible');
-                // Smooth scroll to it
-                setTimeout(() => {
-                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }, 50);
+
+    // Blur validation: validate individual fields on blur after first interaction
+    const inputs = form.querySelectorAll('input, textarea');
+    inputs.forEach(input => {
+        let touched = false;
+
+        input.addEventListener('blur', () => {
+            if (!touched) return;
+
+            const fieldName = input.name;
+            const rules = config.fields[fieldName];
+            if (!rules) return;
+
+            const group = input.closest('.form-group');
+            if (!group) return;
+
+            // Clear existing error on this field
+            group.classList.remove('has-error');
+            const existingError = group.querySelector('.field-error');
+            if (existingError) existingError.remove();
+
+            // Validate this single field
+            let value = input.value.trim();
+            if (rules.type === 'int' && value) value = parseInt(value);
+
+            const errors = validateForm({ [fieldName]: value || null }, { [fieldName]: rules });
+            if (errors.length > 0) {
+                group.classList.add('has-error');
+                const errorSpan = document.createElement('span');
+                errorSpan.className = 'field-error';
+                errorSpan.textContent = errors[0].message;
+                errorSpan.setAttribute('role', 'alert');
+                group.appendChild(errorSpan);
+            }
+        });
+
+        input.addEventListener('input', () => {
+            touched = true;
+            // Clear error on typing
+            const group = input.closest('.form-group');
+            if (group && group.classList.contains('has-error')) {
+                group.classList.remove('has-error');
+                const existingError = group.querySelector('.field-error');
+                if (existingError) existingError.remove();
             }
         });
     });
+}
 
-    // Smooth scroll for other anchor links (hero CTA, back-top)
+// ==================== SECTION TOGGLING ====================
+
+function initSectionToggling() {
+    const formSections = document.querySelectorAll('.main-content .section');
+    const cards = document.querySelectorAll('.card');
+
+    cards.forEach(card => {
+        card.addEventListener('click', function (e) {
+            e.preventDefault();
+
+            const targetId = this.getAttribute('href');
+            const target = document.querySelector(targetId);
+            if (!target) return;
+
+            const isAlreadyVisible = target.classList.contains('visible');
+
+            // Hide all sections + reset ARIA
+            formSections.forEach(s => {
+                s.classList.remove('visible');
+                s.setAttribute('aria-hidden', 'true');
+            });
+
+            // Reset all cards
+            cards.forEach(c => {
+                c.classList.remove('card--active');
+                c.setAttribute('aria-expanded', 'false');
+            });
+
+            // If clicking the same card that was already open, just close
+            if (isAlreadyVisible) return;
+
+            // Show target section
+            target.classList.add('visible');
+            target.setAttribute('aria-hidden', 'false');
+
+            // Mark this card as active
+            this.classList.add('card--active');
+            this.setAttribute('aria-expanded', 'true');
+
+            // Smooth scroll to section
+            setTimeout(() => {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 80);
+        });
+    });
+}
+
+// ==================== SMOOTH SCROLL ====================
+
+function initSmoothScroll() {
     document.querySelectorAll('a[href^="#"]:not(.card)').forEach(anchor => {
         anchor.addEventListener('click', function (e) {
             e.preventDefault();
             const target = document.querySelector(this.getAttribute('href'));
             if (target) {
-                target.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
         });
     });
 }
+
+// ==================== DYNAMIC YEAR ====================
+
+function setFooterYear() {
+    const el = document.getElementById('year');
+    if (el) el.textContent = new Date().getFullYear();
+}
+
+// ==================== INIT ====================
+
+function init() {
+    initSupabase();
+    createFormHandler('village', CONFIG.forms.village);
+    createFormHandler('jeune', CONFIG.forms.jeune);
+    initSectionToggling();
+    initSmoothScroll();
+    setFooterYear();
+}
+
+document.addEventListener('DOMContentLoaded', init);

@@ -3,22 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chez Armand - Cr&eacute;er du lien social dans les villages</title>
-    <meta name="description" content="Association cr&eacute;ant du lien social dans les villages de moins de 100 habitants en proposant planches de charcuterie, bi&egrave;res et vins l'&eacute;t&eacute;.">
-    <link rel="stylesheet" href="styles.css?v=4">
+    <title>Chez Armand - Créer du lien social dans les villages</title>
+    <meta name="description" content="Association créant du lien social dans les villages de moins de 100 habitants en proposant planches de charcuterie, bières et vins l'été.">
+    <meta name="theme-color" content="#8B4513">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="Chez Armand - Créer du lien social dans les villages">
+    <meta property="og:description" content="On ramène la fête là où il n'y a plus de bistrot. Un vieux camion, des planches de charcuterie, des bières et du bon vin dans les villages de moins de 100 habitants.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://chez-armand.fr">
+    <meta property="og:image" content="https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1200&q=80">
+    <meta property="og:locale" content="fr_FR">
+
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚚</text></svg>">
+
+    <link rel="stylesheet" href="styles.css?v=6">
 </head>
 <body>
     <!-- Hero Section -->
     <header class="hero" id="top">
         <div class="hero-content">
             <h1 class="hero-title">Chez Armand</h1>
-            <p class="hero-subtitle">On ram&egrave;ne la f&ecirc;te l&agrave; o&ugrave; il n'y a plus de bistrot.</p>
+            <p class="hero-subtitle">On ramène la fête là où il n'y a plus de bistrot.</p>
             <p class="hero-description">
-                Un vieux camion, des planches de charcuterie, des bi&egrave;res et du bon vin :
-                on sillonne les villages de moins de 100 habitants pour cr&eacute;er des moments de convivialit&eacute;.
+                Un vieux camion, des planches de charcuterie, des bières et du bon vin :
+                on sillonne les villages de moins de 100 habitants pour créer des moments de convivialité.
             </p>
             <div class="hero-cta">
-                <a href="#choices" class="btn btn-hero btn-village">D&eacute;couvrir &darr;</a>
+                <a href="#choices" class="btn btn-hero btn-village">Découvrir ↓</a>
             </div>
         </div>
     </header>
@@ -29,19 +42,19 @@
             <h2 class="section-title">Qui sommes-nous ?</h2>
             <div class="features">
                 <div class="feature">
-                    <span class="feature-icon">&#x1F69A;</span>
+                    <span class="feature-icon" role="img" aria-label="Camion">🚚</span>
                     <h3>Le Camion</h3>
-                    <p>Un vieux camion am&eacute;nag&eacute; qui parcourt les routes de campagne tout l'&eacute;t&eacute;, de village en village.</p>
+                    <p>Un vieux camion aménagé qui parcourt les routes de campagne tout l'été, de village en village.</p>
                 </div>
                 <div class="feature">
-                    <span class="feature-icon">&#x1F91D;</span>
+                    <span class="feature-icon" role="img" aria-label="Poignée de main">🤝</span>
                     <h3>Le Lien Social</h3>
-                    <p>Redonner vie aux places de village en cr&eacute;ant des moments de partage entre habitants, jeunes et anciens.</p>
+                    <p>Redonner vie aux places de village en créant des moments de partage entre habitants, jeunes et anciens.</p>
                 </div>
                 <div class="feature">
-                    <span class="feature-icon">&#x1F389;</span>
-                    <h3>La F&ecirc;te</h3>
-                    <p>Charcuterie, bi&egrave;res locales, bons vins et bonne humeur : les ingr&eacute;dients d'une soir&eacute;e r&eacute;ussie.</p>
+                    <span class="feature-icon" role="img" aria-label="Fête">🎉</span>
+                    <h3>La Fête</h3>
+                    <p>Charcuterie, bières locales, bons vins et bonne humeur : les ingrédients d'une soirée réussie.</p>
                 </div>
             </div>
         </div>
@@ -52,17 +65,17 @@
         <div class="container">
             <h2 class="section-title">Comment participer ?</h2>
             <div class="cards">
-                <a href="#village-section" class="card card-village">
-                    <span class="card-icon">&#x1F3D8;&#xFE0F;</span>
-                    <h3>Vous &ecirc;tes un village ?</h3>
-                    <p>Inscrivez votre commune pour accueillir Chez Armand cet &eacute;t&eacute; et offrir un moment de convivialit&eacute; &agrave; vos habitants.</p>
-                    <span class="card-btn">Inscrire mon village &rarr;</span>
+                <a href="#village-section" class="card card-village" aria-expanded="false" aria-controls="village-section">
+                    <span class="card-icon" role="img" aria-label="Village">🏘️</span>
+                    <h3>Vous êtes un village ?</h3>
+                    <p>Inscrivez votre commune pour accueillir Chez Armand cet été et offrir un moment de convivialité à vos habitants.</p>
+                    <span class="card-btn">Inscrire mon village →</span>
                 </a>
-                <a href="#jeune-section" class="card card-jeune">
-                    <span class="card-icon">&#x1F64B;</span>
-                    <h3>Vous &ecirc;tes un jeune ?</h3>
-                    <p>Rejoignez l'&eacute;quipe pour organiser 3 &agrave; 4 f&ecirc;tes de village cet &eacute;t&eacute;. Une aventure humaine unique !</p>
-                    <span class="card-btn">Rejoindre l'&eacute;quipe &rarr;</span>
+                <a href="#jeune-section" class="card card-jeune" aria-expanded="false" aria-controls="jeune-section">
+                    <span class="card-icon" role="img" aria-label="Personne qui lève la main">🙋</span>
+                    <h3>Vous êtes un jeune ?</h3>
+                    <p>Rejoignez l'équipe pour organiser 3 à 4 fêtes de village cet été. Une aventure humaine unique !</p>
+                    <span class="card-btn">Rejoindre l'équipe →</span>
                 </a>
             </div>
         </div>
@@ -71,13 +84,13 @@
     <!-- Main Content -->
     <main class="main-content">
         <!-- Village Section -->
-        <section class="section hidden" id="village-section">
+        <section class="section" id="village-section" aria-hidden="true">
             <div class="container">
                 <h2 class="section-title">Inscrire mon village</h2>
                 <p class="section-description">
-                    Remplissez ce formulaire et on vous recontacte pour organiser la soir&eacute;e.
+                    Remplissez ce formulaire et on vous recontacte pour organiser la soirée.
                 </p>
-                <form id="village-form" class="form">
+                <form id="village-form" class="form" novalidate>
                     <div class="form-group">
                         <label for="village-nom">Nom du village *</label>
                         <input type="text" id="village-nom" name="nom" required>
@@ -105,13 +118,13 @@
                             <input type="email" id="village-contact-email" name="contact_email" required>
                         </div>
                         <div class="form-group">
-                            <label for="village-contact-telephone">T&eacute;l&eacute;phone *</label>
+                            <label for="village-contact-telephone">Téléphone *</label>
                             <input type="tel" id="village-contact-telephone" name="contact_telephone" required>
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label for="village-date">Date souhait&eacute;e (optionnel)</label>
+                        <label for="village-date">Date souhaitée (optionnel)</label>
                         <input type="date" id="village-date" name="date_souhaitee">
                     </div>
 
@@ -121,23 +134,23 @@
                     </div>
 
                     <button type="submit" class="btn btn-primary">Envoyer la demande</button>
-                    <div id="village-message" class="form-message"></div>
+                    <div id="village-message" class="form-message" role="status" aria-live="polite"></div>
                 </form>
-                <div class="back-top"><a href="#top">&uarr; Retour en haut</a></div>
+                <div class="back-top"><a href="#top">↑ Retour en haut</a></div>
             </div>
         </section>
 
         <!-- Jeune Section -->
-        <section class="section section-alt hidden" id="jeune-section">
+        <section class="section section-alt" id="jeune-section" aria-hidden="true">
             <div class="container">
-                <h2 class="section-title">Rejoindre l'&eacute;quipe</h2>
+                <h2 class="section-title">Rejoindre l'équipe</h2>
                 <p class="section-description">
-                    Tu as entre 16 et 35 ans et envie d'une exp&eacute;rience enrichissante ? Postule ici !
+                    Tu as entre 16 et 35 ans et envie d'une expérience enrichissante ? Postule ici !
                 </p>
-                <form id="jeune-form" class="form">
+                <form id="jeune-form" class="form" novalidate>
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="jeune-prenom">Pr&eacute;nom *</label>
+                            <label for="jeune-prenom">Prénom *</label>
                             <input type="text" id="jeune-prenom" name="prenom" required>
                         </div>
                         <div class="form-group">
@@ -147,7 +160,7 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="jeune-age">&Acirc;ge *</label>
+                        <label for="jeune-age">Âge *</label>
                         <input type="number" id="jeune-age" name="age" required min="16" max="35">
                     </div>
 
@@ -157,7 +170,7 @@
                             <input type="email" id="jeune-email" name="email" required>
                         </div>
                         <div class="form-group">
-                            <label for="jeune-telephone">T&eacute;l&eacute;phone *</label>
+                            <label for="jeune-telephone">Téléphone *</label>
                             <input type="tel" id="jeune-telephone" name="telephone" required>
                         </div>
                     </div>
@@ -168,9 +181,9 @@
                     </div>
 
                     <button type="submit" class="btn btn-primary">Postuler</button>
-                    <div id="jeune-message" class="form-message"></div>
+                    <div id="jeune-message" class="form-message" role="status" aria-live="polite"></div>
                 </form>
-                <div class="back-top"><a href="#top">&uarr; Retour en haut</a></div>
+                <div class="back-top"><a href="#top">↑ Retour en haut</a></div>
             </div>
         </section>
     </main>
@@ -179,12 +192,12 @@
     <footer class="footer">
         <div class="container">
             <p class="footer-brand">Chez Armand</p>
-            <p>&copy; 2025 Chez Armand. Tous droits r&eacute;serv&eacute;s.</p>
-            <p>Association cr&eacute;ant du lien social dans les villages fran&ccedil;ais</p>
+            <p>&copy; <span id="year">2026</span> Chez Armand. Tous droits réservés.</p>
+            <p>Association créant du lien social dans les villages français</p>
         </div>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="script.js?v=2"></script>
+    <script src="script.js?v=4"></script>
 </body>
 </html>

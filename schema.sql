@@ -31,15 +31,15 @@ CREATE TABLE IF NOT EXISTS jeunes (
 ALTER TABLE villages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE jeunes ENABLE ROW LEVEL SECURITY;
 
--- Create policies to allow public inserts
+-- Create policies to allow public inserts (anon = Supabase anonymous client role)
 CREATE POLICY "Allow public inserts on villages" ON villages
   FOR INSERT
-  TO public
+  TO anon
   WITH CHECK (true);
 
 CREATE POLICY "Allow public inserts on jeunes" ON jeunes
   FOR INSERT
-  TO public
+  TO anon
   WITH CHECK (true);
 
 -- Create indexes for better performance

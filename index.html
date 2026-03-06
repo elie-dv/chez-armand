@@ -3,122 +3,175 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chez Armand - Créer du lien social dans les villages</title>
-    <meta name="description" content="Association créant du lien social dans les villages de moins de 100 habitants en proposant planches de charcuterie, bières et vins l'été.">
-    <link rel="stylesheet" href="styles.css">
+    <title>Chez Armand - Cr&eacute;er du lien social dans les villages</title>
+    <meta name="description" content="Association cr&eacute;ant du lien social dans les villages de moins de 100 habitants en proposant planches de charcuterie, bi&egrave;res et vins l'&eacute;t&eacute;.">
+    <link rel="stylesheet" href="styles.css?v=2">
 </head>
 <body>
     <!-- Hero Section -->
-    <header class="hero">
+    <header class="hero" id="top">
         <div class="hero-content">
             <h1 class="hero-title">Chez Armand</h1>
-            <p class="hero-subtitle">Créer du lien social dans les villages où il n'y a plus de commerces</p>
+            <p class="hero-subtitle">On ram&egrave;ne la f&ecirc;te l&agrave; o&ugrave; il n'y a plus de bistrot.</p>
             <p class="hero-description">
-                L'association tourne l'été avec un vieux camion, en vendant planches de charcuterie, bières et vins 
-                dans les villages de moins de 100 habitants.
+                Un vieux camion, des planches de charcuterie, des bi&egrave;res et du bon vin :
+                on sillonne les villages de moins de 100 habitants pour cr&eacute;er des moments de convivialit&eacute;.
             </p>
+            <div class="hero-cta">
+                <a href="#village-section" class="btn btn-hero btn-village">Je suis un village</a>
+                <a href="#jeune-section" class="btn btn-hero btn-jeune">Je suis un jeune</a>
+            </div>
         </div>
     </header>
+
+    <!-- Qui sommes-nous -->
+    <section class="section about" id="about">
+        <div class="container">
+            <h2 class="section-title">Qui sommes-nous ?</h2>
+            <div class="features">
+                <div class="feature">
+                    <span class="feature-icon">&#x1F69A;</span>
+                    <h3>Le Camion</h3>
+                    <p>Un vieux camion am&eacute;nag&eacute; qui parcourt les routes de campagne tout l'&eacute;t&eacute;, de village en village.</p>
+                </div>
+                <div class="feature">
+                    <span class="feature-icon">&#x1F91D;</span>
+                    <h3>Le Lien Social</h3>
+                    <p>Redonner vie aux places de village en cr&eacute;ant des moments de partage entre habitants, jeunes et anciens.</p>
+                </div>
+                <div class="feature">
+                    <span class="feature-icon">&#x1F389;</span>
+                    <h3>La F&ecirc;te</h3>
+                    <p>Charcuterie, bi&egrave;res locales, bons vins et bonne humeur : les ingr&eacute;dients d'une soir&eacute;e r&eacute;ussie.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Cartes de choix -->
+    <section class="section choices" id="choices">
+        <div class="container">
+            <h2 class="section-title">Comment participer ?</h2>
+            <div class="cards">
+                <a href="#village-section" class="card card-village">
+                    <span class="card-icon">&#x1F3D8;&#xFE0F;</span>
+                    <h3>Vous &ecirc;tes un village ?</h3>
+                    <p>Inscrivez votre commune pour accueillir Chez Armand cet &eacute;t&eacute; et offrir un moment de convivialit&eacute; &agrave; vos habitants.</p>
+                    <span class="card-btn">Inscrire mon village &rarr;</span>
+                </a>
+                <a href="#jeune-section" class="card card-jeune">
+                    <span class="card-icon">&#x1F64B;</span>
+                    <h3>Vous &ecirc;tes un jeune ?</h3>
+                    <p>Rejoignez l'&eacute;quipe pour organiser 3 &agrave; 4 f&ecirc;tes de village cet &eacute;t&eacute;. Une aventure humaine unique !</p>
+                    <span class="card-btn">Rejoindre l'&eacute;quipe &rarr;</span>
+                </a>
+            </div>
+        </div>
+    </section>
 
     <!-- Main Content -->
     <main class="main-content">
         <!-- Village Section -->
         <section class="section" id="village-section">
             <div class="container">
-                <h2 class="section-title">Vous êtes un village ?</h2>
+                <h2 class="section-title">Inscrire mon village</h2>
                 <p class="section-description">
-                    Inscrivez votre village pour accueillir Chez Armand cet été et créer un moment de convivialité 
-                    pour vos habitants.
+                    Remplissez ce formulaire et on vous recontacte pour organiser la soir&eacute;e.
                 </p>
                 <form id="village-form" class="form">
                     <div class="form-group">
                         <label for="village-nom">Nom du village *</label>
                         <input type="text" id="village-nom" name="nom" required>
                     </div>
-                    
-                    <div class="form-group">
-                        <label for="village-code-postal">Code postal *</label>
-                        <input type="text" id="village-code-postal" name="code_postal" required pattern="[0-9]{5}">
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="village-code-postal">Code postal *</label>
+                            <input type="text" id="village-code-postal" name="code_postal" required pattern="[0-9]{5}">
+                        </div>
+                        <div class="form-group">
+                            <label for="village-habitants">Nombre d'habitants *</label>
+                            <input type="number" id="village-habitants" name="nombre_habitants" required min="1" max="100">
+                        </div>
                     </div>
-                    
-                    <div class="form-group">
-                        <label for="village-habitants">Nombre d'habitants *</label>
-                        <input type="number" id="village-habitants" name="nombre_habitants" required min="1" max="100">
-                    </div>
-                    
+
                     <div class="form-group">
                         <label for="village-contact-nom">Nom du contact *</label>
                         <input type="text" id="village-contact-nom" name="contact_nom" required>
                     </div>
-                    
-                    <div class="form-group">
-                        <label for="village-contact-email">Email du contact *</label>
-                        <input type="email" id="village-contact-email" name="contact_email" required>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="village-contact-email">Email *</label>
+                            <input type="email" id="village-contact-email" name="contact_email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="village-contact-telephone">T&eacute;l&eacute;phone *</label>
+                            <input type="tel" id="village-contact-telephone" name="contact_telephone" required>
+                        </div>
                     </div>
-                    
+
                     <div class="form-group">
-                        <label for="village-contact-telephone">Téléphone du contact *</label>
-                        <input type="tel" id="village-contact-telephone" name="contact_telephone" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="village-date">Date souhaitée (optionnel)</label>
+                        <label for="village-date">Date souhait&eacute;e (optionnel)</label>
                         <input type="date" id="village-date" name="date_souhaitee">
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="village-message-text">Message (optionnel)</label>
                         <textarea id="village-message-text" name="message" rows="4"></textarea>
                     </div>
-                    
+
                     <button type="submit" class="btn btn-primary">Envoyer la demande</button>
                     <div id="village-message" class="form-message"></div>
                 </form>
+                <div class="back-top"><a href="#top">&uarr; Retour en haut</a></div>
             </div>
         </section>
 
         <!-- Jeune Section -->
         <section class="section section-alt" id="jeune-section">
             <div class="container">
-                <h2 class="section-title">Vous êtes un jeune ?</h2>
+                <h2 class="section-title">Rejoindre l'&eacute;quipe</h2>
                 <p class="section-description">
-                    Rejoignez l'équipe de Chez Armand et participez à l'organisation de 3 à 4 fêtes de villages cet été. 
-                    Une expérience enrichissante pour créer du lien social !
+                    Tu as entre 16 et 35 ans et envie d'une exp&eacute;rience enrichissante ? Postule ici !
                 </p>
                 <form id="jeune-form" class="form">
-                    <div class="form-group">
-                        <label for="jeune-prenom">Prénom *</label>
-                        <input type="text" id="jeune-prenom" name="prenom" required>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="jeune-prenom">Pr&eacute;nom *</label>
+                            <input type="text" id="jeune-prenom" name="prenom" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="jeune-nom">Nom *</label>
+                            <input type="text" id="jeune-nom" name="nom" required>
+                        </div>
                     </div>
-                    
+
                     <div class="form-group">
-                        <label for="jeune-nom">Nom *</label>
-                        <input type="text" id="jeune-nom" name="nom" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="jeune-age">Âge *</label>
+                        <label for="jeune-age">&Acirc;ge *</label>
                         <input type="number" id="jeune-age" name="age" required min="16" max="35">
                     </div>
-                    
-                    <div class="form-group">
-                        <label for="jeune-email">Email *</label>
-                        <input type="email" id="jeune-email" name="email" required>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="jeune-email">Email *</label>
+                            <input type="email" id="jeune-email" name="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="jeune-telephone">T&eacute;l&eacute;phone *</label>
+                            <input type="tel" id="jeune-telephone" name="telephone" required>
+                        </div>
                     </div>
-                    
-                    <div class="form-group">
-                        <label for="jeune-telephone">Téléphone *</label>
-                        <input type="tel" id="jeune-telephone" name="telephone" required>
-                    </div>
-                    
+
                     <div class="form-group">
                         <label for="jeune-motivation">Motivation *</label>
                         <textarea id="jeune-motivation" name="motivation" rows="4" required placeholder="Pourquoi souhaitez-vous rejoindre Chez Armand ?"></textarea>
                     </div>
-                    
+
                     <button type="submit" class="btn btn-primary">Postuler</button>
                     <div id="jeune-message" class="form-message"></div>
                 </form>
+                <div class="back-top"><a href="#top">&uarr; Retour en haut</a></div>
             </div>
         </section>
     </main>
@@ -126,8 +179,9 @@
     <!-- Footer -->
     <footer class="footer">
         <div class="container">
-            <p>&copy; 2024 Chez Armand. Tous droits réservés.</p>
-            <p>Association créant du lien social dans les villages français</p>
+            <p class="footer-brand">Chez Armand</p>
+            <p>&copy; 2025 Chez Armand. Tous droits r&eacute;serv&eacute;s.</p>
+            <p>Association cr&eacute;ant du lien social dans les villages fran&ccedil;ais</p>
         </div>
     </footer>
 

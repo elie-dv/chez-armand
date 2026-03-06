@@ -122,24 +122,17 @@ function initializeForms() {
     
     try {
         console.log('Submitting village data:', villageData);
-        const { data, error } = await supabaseClient
+        const { error } = await supabaseClient
             .from('villages')
-            .insert([villageData])
-            .select();
+            .insert([villageData]);
         
         if (error) {
             console.error('Supabase error:', error);
             throw error;
         }
         
-        console.log('Success! Data inserted:', data);
         showMessage('village', 'Merci ! Votre demande a été envoyée avec succès. Nous vous contacterons bientôt.', 'success');
         resetForm('village');
-        
-        // Reset form after success message
-        setTimeout(() => {
-            resetForm('village');
-        }, 100);
         
     } catch (error) {
         console.error('Error submitting village form:', error);
@@ -207,24 +200,17 @@ function initializeForms() {
     
     try {
         console.log('Submitting jeune data:', jeuneData);
-        const { data, error } = await supabaseClient
+        const { error } = await supabaseClient
             .from('jeunes')
-            .insert([jeuneData])
-            .select();
+            .insert([jeuneData]);
         
         if (error) {
             console.error('Supabase error:', error);
             throw error;
         }
         
-        console.log('Success! Data inserted:', data);
         showMessage('jeune', 'Merci ! Votre candidature a été envoyée avec succès. Nous vous contacterons bientôt.', 'success');
         resetForm('jeune');
-        
-        // Reset form after success message
-        setTimeout(() => {
-            resetForm('jeune');
-        }, 100);
         
     } catch (error) {
         console.error('Error submitting jeune form:', error);

@@ -221,8 +221,26 @@ function initializeForms() {
     }
     });
     
-        // Smooth scroll for anchor links
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    // Reveal form sections on card click
+    document.querySelectorAll('.card').forEach(card => {
+        card.addEventListener('click', function (e) {
+            e.preventDefault();
+            const targetId = this.getAttribute('href');
+            const target = document.querySelector(targetId);
+            if (target) {
+                // Show the section
+                target.classList.remove('hidden');
+                target.classList.add('visible');
+                // Smooth scroll to it
+                setTimeout(() => {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 50);
+            }
+        });
+    });
+
+    // Smooth scroll for other anchor links (hero CTA, back-top)
+    document.querySelectorAll('a[href^="#"]:not(.card)').forEach(anchor => {
         anchor.addEventListener('click', function (e) {
             e.preventDefault();
             const target = document.querySelector(this.getAttribute('href'));

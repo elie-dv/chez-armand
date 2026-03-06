@@ -40,23 +40,27 @@ body {
 
 /* ==================== HERO ==================== */
 .hero {
-    background: linear-gradient(135deg, #6B3410 0%, #A0522D 50%, #CD853F 100%);
+    background: linear-gradient(rgba(44, 36, 22, 0.55), rgba(44, 36, 22, 0.65)),
+                url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1920&q=80') center/cover no-repeat;
     color: white;
-    padding: 100px 20px 80px;
+    padding: 120px 20px 100px;
     text-align: center;
     position: relative;
     overflow: hidden;
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .hero::before {
     content: '';
     position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(ellipse at 30% 50%, rgba(255,255,255,0.08) 0%, transparent 50%),
-                radial-gradient(ellipse at 70% 50%, rgba(255,255,255,0.05) 0%, transparent 50%);
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 120px;
+    background: linear-gradient(transparent, var(--bg-white));
     pointer-events: none;
 }
 

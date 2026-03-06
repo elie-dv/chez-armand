@@ -221,14 +221,20 @@ function initializeForms() {
     }
     });
     
-    // Reveal form sections on card click
+    // Reveal form sections on card click (only one at a time)
+    const formSections = document.querySelectorAll('.main-content .section');
     document.querySelectorAll('.card').forEach(card => {
         card.addEventListener('click', function (e) {
             e.preventDefault();
             const targetId = this.getAttribute('href');
             const target = document.querySelector(targetId);
             if (target) {
-                // Show the section
+                // Hide all form sections first
+                formSections.forEach(s => {
+                    s.classList.remove('visible');
+                    s.classList.add('hidden');
+                });
+                // Show only the selected one
                 target.classList.remove('hidden');
                 target.classList.add('visible');
                 // Smooth scroll to it

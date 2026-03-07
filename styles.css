@@ -283,23 +283,27 @@ a.card:hover {
     padding: 80px 0;
 }
 
-/* Smooth section transitions with max-height + opacity */
+/* Keep section height stable, animate only appearance */
 .main-content .section {
-    overflow: hidden;
-    max-height: 0;
-    opacity: 0;
+    display: none;
     padding: 0;
-    transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1),
-                opacity 0.4s ease,
-                padding 0.4s ease;
-    pointer-events: none;
 }
 
 .main-content .section.visible {
-    max-height: 1200px;
-    opacity: 1;
+    display: block;
     padding: 80px 0;
-    pointer-events: auto;
+    animation: sectionFadeIn 0.35s ease;
+}
+
+@keyframes sectionFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .section-alt {

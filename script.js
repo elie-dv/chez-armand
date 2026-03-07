@@ -344,6 +344,15 @@ function initSectionToggling() {
             // Mark this card as active
             this.classList.add('card--active');
             this.setAttribute('aria-expanded', 'true');
+
+            // Scroll once now that the section layout is immediately stable.
+            requestAnimationFrame(() => {
+                const targetTop = target.getBoundingClientRect().top + window.scrollY - 24;
+                window.scrollTo({
+                    top: Math.max(targetTop, 0),
+                    behavior: 'smooth',
+                });
+            });
         });
     });
 }

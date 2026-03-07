@@ -116,4 +116,4 @@ Pour toute question ou problème :
 
 ## 📄 Licence
 
-© 2024 Chez Armand. Tous droits réservés.
+© 2026 Chez Armand. Tous droits réservés.

@@ -344,11 +344,6 @@ function initSectionToggling() {
             // Mark this card as active
             this.classList.add('card--active');
             this.setAttribute('aria-expanded', 'true');
-
-            // Smooth scroll to section
-            setTimeout(() => {
-                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }, 80);
         });
     });
 }

@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chez Armand - Back-office</title>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚚</text></svg>">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="admin.css?v=1">
+</head>
+<body>
+    <!-- ==================== LOGIN ==================== -->
+    <div id="login-screen">
+        <div class="login-card">
+            <div class="login-brand">🚚</div>
+            <h1>Chez Armand</h1>
+            <p class="login-subtitle">Back-office</p>
+            <form id="login-form">
+                <div class="login-field">
+                    <label for="login-email">Email</label>
+                    <input type="email" id="login-email" required autocomplete="email">
+                </div>
+                <div class="login-field">
+                    <label for="login-password">Mot de passe</label>
+                    <input type="password" id="login-password" required autocomplete="current-password">
+                </div>
+                <button type="submit" class="btn btn-primary btn-full" id="login-btn">Connexion</button>
+                <div id="login-error" class="login-error" role="alert"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== ADMIN APP ==================== -->
+    <div id="admin-app" class="hidden">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <span class="sidebar-brand-icon">🚚</span>
+                <span class="sidebar-brand-text">Chez Armand</span>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" data-view="planning">
+                    <span class="nav-icon">📅</span>
+                    <span class="nav-label">Planning</span>
+                </a>
+                <a href="#" class="nav-item" data-view="vehicules">
+                    <span class="nav-icon">🚐</span>
+                    <span class="nav-label">Véhicules</span>
+                </a>
+                <a href="#" class="nav-item" data-view="villages">
+                    <span class="nav-icon">🏘️</span>
+                    <span class="nav-label">Demandes villages</span>
+                    <span class="nav-badge" id="badge-villages"></span>
+                </a>
+                <a href="#" class="nav-item" data-view="prospection">
+                    <span class="nav-icon">🧭</span>
+                    <span class="nav-label">Prospection</span>
+                    <span class="nav-badge" id="badge-prospection"></span>
+                </a>
+                <a href="#" class="nav-item" data-view="jeunes">
+                    <span class="nav-icon">🙋</span>
+                    <span class="nav-label">Candidatures</span>
+                    <span class="nav-badge" id="badge-jeunes"></span>
+                </a>
+                <a href="#" class="nav-item" data-view="messagerie">
+                    <span class="nav-icon">💬</span>
+                    <span class="nav-label">Messagerie</span>
+                    <span class="nav-badge" id="badge-messages"></span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-user" id="sidebar-user"></div>
+                <button class="btn-logout" id="logout-btn">Déconnexion</button>
+            </div>
+        </aside>
+
+        <main class="admin-main">
+            <!-- PLANNING VIEW -->
+            <div id="view-planning" class="view">
+                <div class="view-header">
+                    <h1>Planning</h1>
+                    <div class="view-actions">
+                        <button class="btn btn-primary" id="add-event-btn">+ Événement</button>
+                    </div>
+                </div>
+                <div class="planning-toolbar">
+                    <div class="planning-nav">
+                        <button class="btn btn-icon" id="prev-week" title="Semaine précédente">‹</button>
+                        <button class="btn btn-outline" id="today-btn">Aujourd'hui</button>
+                        <button class="btn btn-icon" id="next-week" title="Semaine suivante">›</button>
+                    </div>
+                    <span class="planning-week-label" id="week-label"></span>
+                </div>
+                <div class="planning-scroll">
+                    <div id="planning-grid"></div>
+                </div>
+                <div id="planning-empty" class="empty-state hidden">
+                    <span class="empty-icon">🚐</span>
+                    <h3>Aucun véhicule</h3>
+                    <p>Créez un véhicule pour commencer à planifier vos événements.</p>
+                    <button class="btn btn-primary" id="empty-add-vehicule">+ Ajouter un véhicule</button>
+                </div>
+            </div>
+
+            <!-- VEHICULES VIEW -->
+            <div id="view-vehicules" class="view hidden">
+                <div class="view-header">
+                    <h1>Véhicules</h1>
+                    <div class="view-actions">
+                        <button class="btn btn-primary" id="add-vehicule-btn">+ Véhicule</button>
+                    </div>
+                </div>
+                <div id="vehicules-list"></div>
+            </div>
+
+            <!-- VILLAGES VIEW -->
+            <div id="view-villages" class="view hidden">
+                <div class="view-header">
+                    <h1>Demandes de villages</h1>
+                </div>
+                <div class="filter-bar" id="villages-filters">
+                    <button class="filter-btn active" data-filter="all">Toutes</button>
+                    <button class="filter-btn" data-filter="nouveau">Nouvelles</button>
+                    <button class="filter-btn" data-filter="contacte">Contactées</button>
+                    <button class="filter-btn" data-filter="accepte">Acceptées</button>
+                    <button class="filter-btn" data-filter="refuse">Refusées</button>
+                </div>
+                <div id="villages-list"></div>
+            </div>
+
+            <!-- PROSPECTION VIEW -->
+            <div id="view-prospection" class="view hidden">
+                <div class="view-header">
+                    <div>
+                        <h1>Prospection communes</h1>
+                        <p class="view-subtitle">Communes de moins de 500 habitants avec moins de 3 commerces estimés.</p>
+                    </div>
+                    <div class="view-actions">
+                        <button class="btn btn-outline" id="prospection-refresh-btn">Actualiser</button>
+                        <button class="btn btn-outline" id="prospection-add-btn">+ Ajouter une commune</button>
+                        <button class="btn btn-primary" id="prospection-scan-btn">Lancer la recherche 22/35/56</button>
+                    </div>
+                </div>
+
+                <div class="prospection-stats" id="prospection-stats"></div>
+
+                <div class="prospection-controls">
+                    <input type="search" id="prospection-search" placeholder="Rechercher une commune..." class="prospection-search">
+                    <select id="prospection-dept-filter" class="prospection-select">
+                        <option value="all">Tous les départements</option>
+                        <option value="22">Côtes-d’Armor</option>
+                        <option value="35">Ille-et-Vilaine</option>
+                        <option value="56">Morbihan</option>
+                    </select>
+                    <fieldset class="prospection-source-control" aria-label="Sources des infos mairie">
+                        <legend>Sources infos mairie</legend>
+                        <label><input type="checkbox" name="prospection-source" value="api-lannuaire" checked> Annuaire</label>
+                        <label><input type="checkbox" name="prospection-source" value="etablissements-publics" checked> Établissements publics</label>
+                    </fieldset>
+                    <div class="filter-bar compact" id="prospection-filters">
+                        <button class="filter-btn active" data-filter="all">Toutes</button>
+                        <button class="filter-btn" data-filter="to_review">À qualifier</button>
+                        <button class="filter-btn" data-filter="ready_to_contact">Prêtes</button>
+                        <button class="filter-btn" data-filter="email_sent">Emails envoyés</button>
+                        <button class="filter-btn" data-filter="to_call">À appeler</button>
+                        <button class="filter-btn" data-filter="interested">Intéressées</button>
+                    </div>
+                </div>
+
+                <div class="prospection-layout">
+                    <div class="prospection-map-panel">
+                        <div class="map-draw-toolbar">
+                            <input type="text" id="prospection-area-name" class="map-area-name" value="Zone personnalisée" aria-label="Nom de la zone">
+                            <button class="btn btn-outline btn-sm" id="prospection-draw-btn">Dessiner une zone</button>
+                            <button class="btn btn-outline btn-sm" id="prospection-delete-point-btn" disabled>Supprimer point</button>
+                            <button class="btn btn-outline btn-sm" id="prospection-clear-zone-btn" disabled>Effacer</button>
+                            <button class="btn btn-primary btn-sm" id="prospection-save-zone-btn" disabled>Sauvegarder et lancer</button>
+                        </div>
+                        <div id="prospection-map" class="prospection-map"></div>
+                        <div id="prospection-map-fallback" class="prospection-map-fallback hidden"></div>
+                        <div id="prospection-scan-status" class="prospection-scan-status hidden"></div>
+                    </div>
+                    <div class="prospection-list-panel">
+                        <div id="prospection-list"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- JEUNES VIEW -->
+            <div id="view-jeunes" class="view hidden">
+                <div class="view-header">
+                    <h1>Candidatures jeunes</h1>
+                </div>
+                <div class="filter-bar" id="jeunes-filters">
+                    <button class="filter-btn active" data-filter="all">Toutes</button>
+                    <button class="filter-btn" data-filter="nouveau">Nouvelles</button>
+                    <button class="filter-btn" data-filter="accepte">Acceptées</button>
+                    <button class="filter-btn" data-filter="refuse">Refusées</button>
+                </div>
+                <div id="jeunes-list"></div>
+            </div>
+
+            <!-- MESSAGERIE VIEW -->
+            <div id="view-messagerie" class="view hidden">
+                <div class="view-header">
+                    <h1>Messagerie</h1>
+                </div>
+                <div class="msg-layout">
+                    <div class="msg-contacts">
+                        <div class="msg-contacts-header">
+                            <input type="text" id="msg-search" placeholder="Rechercher un jeune..." class="msg-search-input">
+                        </div>
+                        <div class="msg-contacts-list" id="msg-contacts-list"></div>
+                    </div>
+                    <div class="msg-chat" id="msg-chat">
+                        <div class="msg-chat-empty" id="msg-chat-empty">
+                            <span class="empty-icon">💬</span>
+                            <h3>Sélectionnez une conversation</h3>
+                            <p>Choisissez un jeune dans la liste pour commencer à discuter.</p>
+                        </div>
+                        <div class="msg-chat-active hidden" id="msg-chat-active">
+                            <div class="msg-chat-header" id="msg-chat-header"></div>
+                            <div class="msg-chat-messages" id="msg-chat-messages"></div>
+                            <div class="msg-chat-input">
+                                <form id="msg-send-form">
+                                    <div class="msg-input-row">
+                                        <textarea id="msg-input" placeholder="Écrire un message..." rows="1"></textarea>
+                                        <button type="submit" class="btn btn-primary msg-send-btn" title="Envoyer">↑</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ==================== MODAL ==================== -->
+    <div id="modal-overlay" class="modal-overlay hidden">
+        <div class="modal" id="modal-box">
+            <div class="modal-header">
+                <h2 id="modal-title"></h2>
+                <button class="modal-close" id="modal-close">&times;</button>
+            </div>
+            <div class="modal-body" id="modal-body"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="admin.js?v=1"></script>
+</body>
+</html>

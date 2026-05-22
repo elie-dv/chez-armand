@@ -1,0 +1,23 @@
+{
+  "version": "5",
+  "redirects": {
+    "https://esm.sh/@supabase/supabase-js@2": "https://esm.sh/@supabase/supabase-js@2.106.0"
+  },
+  "remote": {
+    "https://esm.sh/@supabase/supabase-js@2.106.0": "a897c060b1e4db8c6a1d713e2c00a7281b11dfdddcc43f0510433851315c36a7"
+  },
+  "workspace": {
+    "packageJson": {
+      "dependencies": [
+        "npm:@supabase/supabase-js@^2.49.1",
+        "npm:@types/leaflet@^1.9.21",
+        "npm:@vitejs/plugin-vue@^5.2.1",
+        "npm:leaflet@^1.9.4",
+        "npm:vite@^6.2.0",
+        "npm:vue-tsc@^2.2.8",
+        "npm:vue@^3.5.13",
+        "npm:zod@^3.24.2"
+      ]
+    }
+  }
+}

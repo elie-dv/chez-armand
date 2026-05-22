@@ -66,6 +66,15 @@ export type ReplySyncResult = {
   errors: string[];
 };
 
+export type EmailAttachment = {
+  name: string;
+  path: string;
+  mime_type: string;
+  size?: number;
+};
+
+export const PROSPECTION_ATTACHMENT_BUCKET = 'prospection-attachments';
+
 export const prospectionStatusLabels: Record<ProspectionStatus, string> = {
   to_review: 'À qualifier',
   ready_to_contact: 'Prête',
@@ -259,13 +268,14 @@ export function buildProspectionEmail(item: ProspectionRecord) {
     recipient_email: item.enrichment.mairie_email || '',
     subject: prospectionEmailTemplate.subject.replaceAll('{commune}', commune),
     body: prospectionEmailTemplate.body.replaceAll('{commune}', commune),
+    attachments: [] as EmailAttachment[],
   };
 }
 
 export async function sendProspectionEmail(
   client: AppSupabaseClient,
   item: ProspectionRecord,
-  payload: { recipient_email: string; subject: string; body: string },
+  payload: { recipient_email: string; subject: string; body: string; attachments?: EmailAttachment[] },
 ) {
   const { data: { session } } = await client.auth.getSession();
   if (!session?.user) throw new Error('Session admin expirée.');
@@ -278,6 +288,7 @@ export async function sendProspectionEmail(
       recipient_email: payload.recipient_email,
       subject: payload.subject,
       body: payload.body,
+      attachments: payload.attachments || [],
       statut: 'queued',
       created_by: session.user.id,
     }])
@@ -424,4 +435,82 @@ export async function createPolygonProspectionArea(
   if (error) throw new Error(error.message);
   if (!data?.[0]) throw new Error('Zone de prospection non créée.');
   return data[0] as ScanArea;
+}
+
+export type ProspectionAttachmentFile = {
+  name: string;
+  path: string;
+  mime_type: string;
+  size: number;
+  updated_at: string | null;
+};
+
+export async function listProspectionAttachments(
+  client: AppSupabaseClient,
+): Promise<ProspectionAttachmentFile[]> {
+  const { data, error } = await client.storage
+    .from(PROSPECTION_ATTACHMENT_BUCKET)
+    .list('', { limit: 200, sortBy: { column: 'updated_at', order: 'desc' } });
+  if (error) throw new Error(error.message);
+  return (data || [])
+    .filter((entry) => entry.id !== null)
+    .map((entry) => ({
+      name: entry.name,
+      path: entry.name,
+      mime_type: (entry.metadata?.mimetype as string) || guessMimeType(entry.name),
+      size: (entry.metadata?.size as number) || 0,
+      updated_at: entry.updated_at || entry.created_at || null,
+    }));
+}
+
+export async function uploadProspectionAttachment(
+  client: AppSupabaseClient,
+  file: File,
+): Promise<ProspectionAttachmentFile> {
+  const safeName = sanitizeFileName(file.name);
+  const path = `${Date.now()}-${safeName}`;
+  const { error } = await client.storage
+    .from(PROSPECTION_ATTACHMENT_BUCKET)
+    .upload(path, file, { contentType: file.type, upsert: false });
+  if (error) throw new Error(error.message);
+  return {
+    name: file.name,
+    path,
+    mime_type: file.type || guessMimeType(file.name),
+    size: file.size,
+    updated_at: new Date().toISOString(),
+  };
+}
+
+export async function deleteProspectionAttachment(client: AppSupabaseClient, path: string) {
+  const { error } = await client.storage
+    .from(PROSPECTION_ATTACHMENT_BUCKET)
+    .remove([path]);
+  if (error) throw new Error(error.message);
+}
+
+export async function getProspectionAttachmentSignedUrl(
+  client: AppSupabaseClient,
+  path: string,
+  expiresInSeconds = 300,
+): Promise<string> {
+  const { data, error } = await client.storage
+    .from(PROSPECTION_ATTACHMENT_BUCKET)
+    .createSignedUrl(path, expiresInSeconds);
+  if (error || !data?.signedUrl) throw new Error(error?.message || 'URL signée indisponible');
+  return data.signedUrl;
+}
+
+function sanitizeFileName(name: string) {
+  return name.replace(/[^a-zA-Z0-9._-]+/g, '_');
+}
+
+function guessMimeType(name: string) {
+  const lower = name.toLowerCase();
+  if (lower.endsWith('.pdf')) return 'application/pdf';
+  if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) return 'image/jpeg';
+  if (lower.endsWith('.png')) return 'image/png';
+  if (lower.endsWith('.webp')) return 'image/webp';
+  if (lower.endsWith('.gif')) return 'image/gif';
+  return 'application/octet-stream';
 }

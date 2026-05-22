@@ -16,10 +16,12 @@ import {
   sendProspectionEmail,
   syncGmailReplies,
   updateProspectionRecord,
+  type EmailAttachment,
   type ProspectionRecord,
   type ProspectionStatus,
   type ScanResult,
 } from '../prospection';
+import AttachmentPicker from './AttachmentPicker.vue';
 
 const props = defineProps<{
   client: AppSupabaseClient;
@@ -41,6 +43,7 @@ const selectedRecord = ref<ProspectionRecord | null>(null);
 const emailPreview = ref<ReturnType<typeof buildProspectionEmail> | null>(null);
 const scanRunning = ref(false);
 const emailSending = ref(false);
+const attachmentPickerOpen = ref(false);
 const scanStatus = ref('');
 const scanProgress = ref(0);
 const replySyncRunning = ref(false);
@@ -332,6 +335,7 @@ async function sendCurrentEmail() {
     await sendProspectionEmail(props.client, selectedRecord.value, emailPreview.value);
     emailPreview.value = null;
     selectedRecord.value = null;
+    attachmentPickerOpen.value = false;
     await refresh();
     emit('refreshBadges');
   } catch (err) {
@@ -339,6 +343,11 @@ async function sendCurrentEmail() {
   } finally {
     emailSending.value = false;
   }
+}
+
+function removeAttachment(attachment: EmailAttachment) {
+  if (!emailPreview.value) return;
+  emailPreview.value.attachments = emailPreview.value.attachments.filter((a) => a.path !== attachment.path);
 }
 
 async function syncReplies() {
@@ -680,6 +689,18 @@ onBeforeUnmount(() => {
           <label>Message</label>
           <textarea v-model="emailPreview.body" rows="10" />
         </div>
+        <div class="form-group">
+          <label>Pièces jointes</label>
+          <div class="attachment-chips">
+            <span v-for="att in emailPreview.attachments" :key="att.path" class="attachment-chip">
+              📎 {{ att.name }}
+              <button type="button" class="attachment-chip-remove" title="Retirer" @click="removeAttachment(att)">✕</button>
+            </span>
+            <button class="btn btn-outline btn-sm" type="button" @click="attachmentPickerOpen = true">
+              {{ emailPreview.attachments.length ? 'Modifier les PJ' : 'Ajouter une PJ' }}
+            </button>
+          </div>
+        </div>
         <p class="technical-note">L’envoi passe par la fonction serveur Supabase <code>send-prospection-email</code>, branchée à Gmail.</p>
         <div class="form-actions">
           <button class="btn btn-outline" type="button" @click="emailPreview = null">Fermer</button>
@@ -688,6 +709,13 @@ onBeforeUnmount(() => {
           </button>
         </div>
       </form>
+      <AttachmentPicker
+        :client="client"
+        :open="attachmentPickerOpen"
+        :model-value="emailPreview.attachments"
+        @update:model-value="emailPreview.attachments = $event"
+        @close="attachmentPickerOpen = false"
+      />
     </div>
 
     <div v-if="isLoading" class="empty-state compact-empty">
@@ -737,3 +765,35 @@ onBeforeUnmount(() => {
     </div>
   </div>
 </template>
+
+<style scoped>
+.attachment-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+.attachment-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.5rem 0.25rem 0.6rem;
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  border-radius: 999px;
+  font-size: 0.85rem;
+  max-width: 220px;
+}
+.attachment-chip-remove {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: inherit;
+  opacity: 0.65;
+  padding: 0 0.15rem;
+}
+.attachment-chip-remove:hover {
+  opacity: 1;
+}
+</style>

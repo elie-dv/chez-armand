@@ -264,6 +264,7 @@ export type Database = {
           reply_from: string | null;
           reply_subject: string | null;
           reply_snippet: string | null;
+          attachments: Json;
           created_by: string | null;
         },
         {
@@ -283,6 +284,7 @@ export type Database = {
           reply_from?: string | null;
           reply_subject?: string | null;
           reply_snippet?: string | null;
+          attachments?: Json;
           created_by?: string | null;
         }
       >;

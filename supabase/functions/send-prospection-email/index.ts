@@ -6,13 +6,22 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
+type EmailAttachment = {
+  name: string;
+  path: string;
+  mime_type: string;
+};
+
 type ProspectionEmail = {
   id: string;
   recipient_email: string;
   subject: string;
   body: string;
   statut: string;
+  attachments: EmailAttachment[] | null;
 };
+
+const ATTACHMENT_BUCKET = 'prospection-attachments';
 
 type GmailSendResult = {
   id: string | null;
@@ -51,7 +60,7 @@ Deno.serve(async (req) => {
       .single();
     if (emailError || !email) return json({ error: emailError?.message || 'Email not found' }, 404);
 
-    const sentMessage = await sendWithGmail(email as ProspectionEmail);
+    const sentMessage = await sendWithGmail(supabase, email as ProspectionEmail);
 
     const { error: updateError } = await supabase
       .from('prospection_emails')
@@ -75,20 +84,35 @@ Deno.serve(async (req) => {
   }
 });
 
-async function sendWithGmail(email: ProspectionEmail): Promise<GmailSendResult> {
+async function sendWithGmail(
+  supabase: ReturnType<typeof createClient>,
+  email: ProspectionEmail,
+): Promise<GmailSendResult> {
   const accessToken = await getGmailAccessToken();
   const fromEmail = requiredEnv('GMAIL_FROM_EMAIL');
   const fromName = Deno.env.get('GMAIL_FROM_NAME') || 'Chez Armand';
 
-  const mime = [
-    `From: ${encodeAddress(fromName, fromEmail)}`,
-    `To: ${email.recipient_email}`,
-    `Subject: ${encodeHeader(email.subject)}`,
-    'MIME-Version: 1.0',
-    'Content-Type: text/plain; charset="UTF-8"',
-    '',
-    email.body,
-  ].join('\r\n');
+  const attachments = Array.isArray(email.attachments) ? email.attachments : [];
+  const downloadedAttachments = await downloadAttachments(supabase, attachments);
+
+  const mime = downloadedAttachments.length
+    ? buildMultipartMime({
+        fromName,
+        fromEmail,
+        recipient: email.recipient_email,
+        subject: email.subject,
+        body: email.body,
+        attachments: downloadedAttachments,
+      })
+    : [
+        `From: ${encodeAddress(fromName, fromEmail)}`,
+        `To: ${email.recipient_email}`,
+        `Subject: ${encodeHeader(email.subject)}`,
+        'MIME-Version: 1.0',
+        'Content-Type: text/plain; charset="UTF-8"',
+        '',
+        email.body,
+      ].join('\r\n');
 
   const response = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
     method: 'POST',
@@ -121,6 +145,83 @@ async function sendWithGmail(email: ProspectionEmail): Promise<GmailSendResult> 
     id: payload.id || null,
     threadId: payload.threadId || null,
   };
+}
+
+type DownloadedAttachment = EmailAttachment & { base64: string };
+
+async function downloadAttachments(
+  supabase: ReturnType<typeof createClient>,
+  attachments: EmailAttachment[],
+): Promise<DownloadedAttachment[]> {
+  if (!attachments.length) return [];
+  const results: DownloadedAttachment[] = [];
+  for (const att of attachments) {
+    if (!att?.path || !att?.name || !att?.mime_type) {
+      console.warn('Skipping malformed attachment', att);
+      continue;
+    }
+    const { data, error } = await supabase.storage.from(ATTACHMENT_BUCKET).download(att.path);
+    if (error || !data) {
+      throw new Error(`Pièce jointe introuvable: ${att.name} (${att.path})`);
+    }
+    const buffer = await data.arrayBuffer();
+    results.push({ ...att, base64: base64FromBytes(new Uint8Array(buffer)) });
+  }
+  return results;
+}
+
+function buildMultipartMime(params: {
+  fromName: string;
+  fromEmail: string;
+  recipient: string;
+  subject: string;
+  body: string;
+  attachments: DownloadedAttachment[];
+}): string {
+  const boundary = `=_chez_armand_${crypto.randomUUID().replace(/-/g, '')}`;
+  const lines: string[] = [
+    `From: ${encodeAddress(params.fromName, params.fromEmail)}`,
+    `To: ${params.recipient}`,
+    `Subject: ${encodeHeader(params.subject)}`,
+    'MIME-Version: 1.0',
+    `Content-Type: multipart/mixed; boundary="${boundary}"`,
+    '',
+    `--${boundary}`,
+    'Content-Type: text/plain; charset="UTF-8"',
+    'Content-Transfer-Encoding: 8bit',
+    '',
+    params.body,
+  ];
+
+  for (const att of params.attachments) {
+    lines.push(
+      `--${boundary}`,
+      `Content-Type: ${att.mime_type}; name="${encodeHeader(att.name)}"`,
+      `Content-Disposition: attachment; filename="${encodeHeader(att.name)}"`,
+      'Content-Transfer-Encoding: base64',
+      '',
+      chunkBase64(att.base64),
+    );
+  }
+  lines.push(`--${boundary}--`, '');
+  return lines.join('\r\n');
+}
+
+function base64FromBytes(bytes: Uint8Array) {
+  let binary = '';
+  const chunkSize = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+  }
+  return btoa(binary);
+}
+
+function chunkBase64(value: string, width = 76) {
+  const parts: string[] = [];
+  for (let i = 0; i < value.length; i += width) {
+    parts.push(value.slice(i, i + width));
+  }
+  return parts.join('\r\n');
 }
 
 async function getGmailAccessToken() {

@@ -194,7 +194,8 @@ CREATE TABLE IF NOT EXISTS prospection_emails (
   reply_subject TEXT,
   reply_snippet TEXT,
   created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  attachments JSONB NOT NULL DEFAULT '[]'::jsonb
 );
 
 CREATE TABLE IF NOT EXISTS municipality_researches (

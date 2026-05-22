@@ -45,10 +45,9 @@ Deno.serve(async (req) => {
     const authHeader = req.headers.get('Authorization') || '';
     const jwt = authHeader.replace('Bearer ', '').trim();
     if (!jwt) return json({ error: 'Missing Authorization header' }, 401);
+    const userId = requireAuthenticatedJwt(jwt);
 
     const supabase = createClient(supabaseUrl, serviceRoleKey);
-    const { data: userData, error: authError } = await supabase.auth.getUser(jwt);
-    if (authError || !userData.user) return json({ error: 'Unauthorized' }, 401);
 
     const body = await req.json();
     const areaId = body.area_id as string | undefined;
@@ -59,7 +58,7 @@ Deno.serve(async (req) => {
     console.info('scan-prospection-area:start', { areaId, jobId, batchSize });
     const job = jobId
       ? await loadJob(supabase, jobId)
-      : await createJob(supabase, areaId!, userData.user.id);
+      : await createJob(supabase, areaId!, userId);
     console.info('scan-prospection-area:job-loaded', {
       jobId: job.id,
       areaId: job.area_id,
@@ -383,6 +382,35 @@ function jobResponse(job: ScanJob, hasMore: boolean) {
     skipped_count: job.skipped_count,
     error_count: job.error_count,
   };
+}
+
+function requireAuthenticatedJwt(jwt: string) {
+  const [, payloadPart] = jwt.split('.');
+  if (!payloadPart) throw new Error('Invalid session token');
+
+  const payload = JSON.parse(new TextDecoder().decode(base64UrlDecode(payloadPart))) as {
+    exp?: number;
+    role?: string;
+    sub?: string;
+  };
+
+  if (!payload.sub || payload.role !== 'authenticated') {
+    throw new Error('Admin session required');
+  }
+  if (payload.exp && payload.exp * 1000 < Date.now()) {
+    throw new Error('Admin session expired');
+  }
+
+  return payload.sub;
+}
+
+function base64UrlDecode(value: string) {
+  const normalized = value.replace(/-/g, '+').replace(/_/g, '/');
+  const padded = normalized.padEnd(normalized.length + ((4 - normalized.length % 4) % 4), '=');
+  const binary = atob(padded);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+  return bytes;
 }
 
 function json(body: unknown, status = 200) {

@@ -256,8 +256,14 @@ export type Database = {
           statut: string;
           provider: string | null;
           provider_message_id: string | null;
+          provider_thread_id: string | null;
           error_message: string | null;
           sent_at: string | null;
+          reply_message_id: string | null;
+          reply_detected_at: string | null;
+          reply_from: string | null;
+          reply_subject: string | null;
+          reply_snippet: string | null;
           created_by: string | null;
         },
         {
@@ -269,8 +275,14 @@ export type Database = {
           statut?: string;
           provider?: string | null;
           provider_message_id?: string | null;
+          provider_thread_id?: string | null;
           error_message?: string | null;
           sent_at?: string | null;
+          reply_message_id?: string | null;
+          reply_detected_at?: string | null;
+          reply_from?: string | null;
+          reply_subject?: string | null;
+          reply_snippet?: string | null;
           created_by?: string | null;
         }
       >;

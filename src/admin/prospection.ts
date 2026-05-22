@@ -60,6 +60,12 @@ export type ScanResult = {
   saved_count?: number;
 };
 
+export type ReplySyncResult = {
+  checked: number;
+  updated: number;
+  errors: string[];
+};
+
 export const prospectionStatusLabels: Record<ProspectionStatus, string> = {
   to_review: 'À qualifier',
   ready_to_contact: 'Prête',
@@ -282,7 +288,7 @@ export async function sendProspectionEmail(
   const email = emailRows?.[0];
   if (!email) throw new Error('Brouillon email non créé.');
 
-  const result = await callAdminFunction<{ message_id?: string }>(client, 'send-prospection-email', {
+  const result = await callAdminFunction<{ message_id?: string; thread_id?: string }>(client, 'send-prospection-email', {
     email_id: email.id,
   });
 
@@ -292,6 +298,12 @@ export async function sendProspectionEmail(
   });
 
   return result;
+}
+
+export async function syncGmailReplies(client: AppSupabaseClient) {
+  return await callAdminFunction<ReplySyncResult>(client, 'sync-gmail-replies', {
+    limit: 75,
+  }, 90_000);
 }
 
 function readErrorMessage(value: unknown) {

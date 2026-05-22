@@ -110,6 +110,10 @@ Fonctions serveur attendues :
   - Entrée : `{ "email_id": "uuid" }`
   - Rôle : lire le brouillon dans `prospection_emails`, envoyer via Gmail API côté serveur, puis renvoyer `{ "message_id": "..." }`
   - Implémentation fournie : `supabase/functions/send-prospection-email/index.ts`
+- `sync-gmail-replies`
+  - Entrée : `{ "limit": 75 }`
+  - Rôle : lire les threads Gmail des emails envoyés, détecter les réponses entrantes, puis marquer la commune en `replied`
+  - Implémentation fournie : `supabase/functions/sync-gmail-replies/index.ts`
 - `research-municipality`
   - Entrée : `{ "municipality_id": "uuid", "research_id": "uuid" }`
   - Rôle : enrichir une commune avec comité des fêtes, associations, événements existants et sources dans `municipality_researches`
@@ -122,6 +126,7 @@ Déploiement de la fonction de scan :
 ```bash
 supabase functions deploy scan-prospection-area
 supabase functions deploy send-prospection-email
+supabase functions deploy sync-gmail-replies
 ```
 
 Variables attendues côté Supabase Edge Functions :
@@ -137,7 +142,7 @@ Configuration Gmail :
 1. Créer un projet Google Cloud
 2. Activer **Gmail API**
 3. Créer un client OAuth
-4. Obtenir un refresh token avec le scope `https://www.googleapis.com/auth/gmail.send`
+4. Obtenir un refresh token avec les scopes `https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/gmail.readonly`
 5. Ajouter les secrets Supabase :
 
 ```bash
@@ -215,7 +220,7 @@ deno run --allow-net supabase/functions/scan-prospection-area/smoke_test.ts
 - `municipality_enrichments` - Contacts mairie, horaires, nombre de commerces estimé et sources
 - `prospection_records` - Statut commercial, notes, dernière prise de contact et prochaine action
 - `prospection_scan_jobs` - Jobs de scan automatique avec communes candidates, progression, compteurs et erreurs
-- `prospection_emails` - Brouillons, envois, erreurs SMTP et historique email
+- `prospection_emails` - Brouillons, envois, erreurs Gmail, thread Gmail et détection des réponses
 - `municipality_researches` - Recherches contextuelles sur événements, associations et comité des fêtes
 
 ## 🌐 Déploiement sur Vercel
@@ -256,6 +261,7 @@ Les fonctions serveur ne sont pas déployées par Vercel. Elles doivent être pu
 ```bash
 supabase functions deploy scan-prospection-area
 supabase functions deploy send-prospection-email
+supabase functions deploy sync-gmail-replies
 ```
 
 Pour l'envoi Gmail, ajoutez aussi les secrets Supabase :

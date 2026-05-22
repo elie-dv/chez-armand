@@ -14,6 +14,7 @@ import {
   prospectionStatusLabels,
   saveManualProspection,
   sendProspectionEmail,
+  syncGmailReplies,
   updateProspectionRecord,
   type ProspectionRecord,
   type ProspectionStatus,
@@ -42,6 +43,7 @@ const scanRunning = ref(false);
 const emailSending = ref(false);
 const scanStatus = ref('');
 const scanProgress = ref(0);
+const replySyncRunning = ref(false);
 let scanStatusTimer: number | null = null;
 const mairieSources = ref(['api-lannuaire', 'etablissements-publics']);
 const areaName = ref('Zone personnalisée');
@@ -93,6 +95,7 @@ const stats = computed(() => ({
   total: records.value.length,
   ready: records.value.filter((item) => item.statut === 'ready_to_contact').length,
   sent: records.value.filter((item) => item.statut === 'email_sent').length,
+  replied: records.value.filter((item) => item.statut === 'replied').length,
   toCall: records.value.filter((item) => item.statut === 'to_call').length,
   interested: records.value.filter((item) => item.statut === 'interested').length,
 }));
@@ -338,6 +341,24 @@ async function sendCurrentEmail() {
   }
 }
 
+async function syncReplies() {
+  if (replySyncRunning.value) return;
+  replySyncRunning.value = true;
+  error.value = '';
+
+  try {
+    const result = await syncGmailReplies(props.client);
+    const updated = result?.updated || 0;
+    completeScanStatus(updated > 0 ? `${updated} réponse${updated > 1 ? 's' : ''} Gmail détectée${updated > 1 ? 's' : ''}.` : 'Aucune nouvelle réponse Gmail.');
+    await refresh();
+    emit('refreshBadges');
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Impossible de synchroniser les réponses Gmail.';
+  } finally {
+    replySyncRunning.value = false;
+  }
+}
+
 async function runScan() {
   if (scanRunning.value) return;
   scanRunning.value = true;
@@ -443,6 +464,9 @@ onBeforeUnmount(() => {
       </div>
       <div class="view-actions">
         <button class="btn btn-outline" type="button" :disabled="isLoading" @click="refresh">Actualiser</button>
+        <button class="btn btn-outline" type="button" :disabled="replySyncRunning" @click="syncReplies">
+          {{ replySyncRunning ? 'Lecture Gmail...' : 'Synchroniser réponses Gmail' }}
+        </button>
         <button class="btn btn-outline" type="button" @click="isManualOpen = !isManualOpen">+ Ajouter une commune</button>
         <button class="btn btn-primary" type="button" :disabled="scanRunning" @click="runScan">
           {{ scanRunning ? 'Scan en cours...' : 'Lancer la recherche 22/35/56' }}
@@ -456,6 +480,7 @@ onBeforeUnmount(() => {
       <div class="metric-card"><span>{{ stats.total }}</span><label>Communes</label></div>
       <div class="metric-card"><span>{{ stats.ready }}</span><label>Prêtes</label></div>
       <div class="metric-card"><span>{{ stats.sent }}</span><label>Emails envoyés</label></div>
+      <div class="metric-card"><span>{{ stats.replied }}</span><label>Réponses</label></div>
       <div class="metric-card"><span>{{ stats.toCall }}</span><label>À appeler</label></div>
       <div class="metric-card"><span>{{ stats.interested }}</span><label>Intéressées</label></div>
     </div>

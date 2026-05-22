@@ -185,8 +185,14 @@ CREATE TABLE IF NOT EXISTS prospection_emails (
     CHECK (statut IN ('draft', 'queued', 'sent', 'failed')),
   provider TEXT DEFAULT 'gmail_smtp',
   provider_message_id TEXT,
+  provider_thread_id TEXT,
   error_message TEXT,
   sent_at TIMESTAMP WITH TIME ZONE,
+  reply_message_id TEXT,
+  reply_detected_at TIMESTAMP WITH TIME ZONE,
+  reply_from TEXT,
+  reply_subject TEXT,
+  reply_snippet TEXT,
   created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -303,4 +309,6 @@ CREATE INDEX IF NOT EXISTS idx_prospection_records_next_action ON prospection_re
 CREATE INDEX IF NOT EXISTS idx_prospection_scan_jobs_area ON prospection_scan_jobs(area_id);
 CREATE INDEX IF NOT EXISTS idx_prospection_scan_jobs_statut ON prospection_scan_jobs(statut);
 CREATE INDEX IF NOT EXISTS idx_prospection_emails_municipality ON prospection_emails(municipality_id);
+CREATE INDEX IF NOT EXISTS idx_prospection_emails_thread ON prospection_emails(provider_thread_id);
+CREATE INDEX IF NOT EXISTS idx_prospection_emails_reply_detected ON prospection_emails(reply_detected_at);
 CREATE INDEX IF NOT EXISTS idx_municipality_researches_municipality ON municipality_researches(municipality_id);

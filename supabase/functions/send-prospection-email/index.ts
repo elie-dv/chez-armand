@@ -14,6 +14,11 @@ type ProspectionEmail = {
   statut: string;
 };
 
+type GmailSendResult = {
+  id: string | null;
+  threadId: string | null;
+};
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -47,27 +52,29 @@ Deno.serve(async (req) => {
       .single();
     if (emailError || !email) return json({ error: emailError?.message || 'Email not found' }, 404);
 
-    const messageId = await sendWithGmail(email as ProspectionEmail);
+    const sentMessage = await sendWithGmail(email as ProspectionEmail);
 
     const { error: updateError } = await supabase
       .from('prospection_emails')
       .update({
         statut: 'sent',
         sent_at: new Date().toISOString(),
-        provider_message_id: messageId,
+        provider: 'gmail_api',
+        provider_message_id: sentMessage.id,
+        provider_thread_id: sentMessage.threadId,
         error_message: null,
       })
       .eq('id', emailId);
     if (updateError) throw updateError;
 
-    return json({ message_id: messageId });
+    return json({ message_id: sentMessage.id, thread_id: sentMessage.threadId });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     return json({ error: message }, 500);
   }
 });
 
-async function sendWithGmail(email: ProspectionEmail) {
+async function sendWithGmail(email: ProspectionEmail): Promise<GmailSendResult> {
   const accessToken = await getGmailAccessToken();
   const fromEmail = requiredEnv('GMAIL_FROM_EMAIL');
   const fromName = Deno.env.get('GMAIL_FROM_NAME') || 'Chez Armand';
@@ -92,7 +99,7 @@ async function sendWithGmail(email: ProspectionEmail) {
   });
 
   const text = await response.text();
-  let payload: { id?: string; error?: { message?: string } } = {};
+  let payload: { id?: string; threadId?: string; error?: { message?: string } } = {};
   try {
     payload = text ? JSON.parse(text) : {};
   } catch {
@@ -103,7 +110,10 @@ async function sendWithGmail(email: ProspectionEmail) {
     throw new Error(payload.error?.message || text || `Gmail HTTP ${response.status}`);
   }
 
-  return payload.id || null;
+  return {
+    id: payload.id || null,
+    threadId: payload.threadId || null,
+  };
 }
 
 async function getGmailAccessToken() {

@@ -36,10 +36,9 @@ Deno.serve(async (req) => {
     const authHeader = req.headers.get('Authorization') || '';
     const jwt = authHeader.replace('Bearer ', '').trim();
     if (!jwt) return json({ error: 'Missing Authorization header' }, 401);
+    requireAuthenticatedJwt(jwt);
 
     const supabase = createClient(supabaseUrl, serviceRoleKey);
-    const { data: userData, error: authError } = await supabase.auth.getUser(jwt);
-    if (authError || !userData.user) return json({ error: 'Unauthorized' }, 401);
 
     const body = await req.json();
     const emailId = body.email_id as string | undefined;
@@ -70,6 +69,8 @@ Deno.serve(async (req) => {
     return json({ message_id: sentMessage.id, thread_id: sentMessage.threadId });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
+    const stack = err instanceof Error ? err.stack : undefined;
+    console.error('send-prospection-email failed', { message, stack });
     return json({ error: message }, 500);
   }
 });
@@ -107,6 +108,12 @@ async function sendWithGmail(email: ProspectionEmail): Promise<GmailSendResult> 
   }
 
   if (!response.ok) {
+    console.error('Gmail send failed', {
+      status: response.status,
+      statusText: response.statusText,
+      body: text,
+      parsed: payload,
+    });
     throw new Error(payload.error?.message || text || `Gmail HTTP ${response.status}`);
   }
 
@@ -130,8 +137,10 @@ async function getGmailAccessToken() {
 
   const data = await response.json();
   if (!response.ok || !data.access_token) {
+    console.error('Gmail token refresh failed', { status: response.status, data });
     throw new Error(data.error_description || data.error || 'Unable to refresh Gmail access token');
   }
+  console.log('Gmail token refresh ok', { scope: data.scope, expires_in: data.expires_in });
   return data.access_token as string;
 }
 
@@ -139,6 +148,33 @@ function requiredEnv(name: string) {
   const value = Deno.env.get(name);
   if (!value) throw new Error(`Missing ${name}`);
   return value;
+}
+
+function requireAuthenticatedJwt(jwt: string) {
+  const [, payloadPart] = jwt.split('.');
+  if (!payloadPart) throw new Error('Invalid session token');
+
+  const payload = JSON.parse(new TextDecoder().decode(base64UrlDecode(payloadPart))) as {
+    exp?: number;
+    role?: string;
+    sub?: string;
+  };
+
+  if (!payload.sub || payload.role !== 'authenticated') {
+    throw new Error('Admin session required');
+  }
+  if (payload.exp && payload.exp * 1000 < Date.now()) {
+    throw new Error('Admin session expired');
+  }
+}
+
+function base64UrlDecode(value: string) {
+  const normalized = value.replace(/-/g, '+').replace(/_/g, '/');
+  const padded = normalized.padEnd(normalized.length + ((4 - normalized.length % 4) % 4), '=');
+  const binary = atob(padded);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+  return bytes;
 }
 
 function encodeHeader(value: string) {
